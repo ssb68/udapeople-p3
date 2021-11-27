@@ -71,7 +71,7 @@ jobs:
           paths: [backend/node_modules]
           key: backend-build
       - slack/notify:
-          channel: C02NSHHLNTU
+          channel: $SLACK_DEFAULT_CHANNEL
           event: fail
           template: basic_fail_1
   
@@ -136,7 +136,8 @@ workflows:
   default:
     jobs:
       - build-frontend
-      - build-backend
+      - build-backend:
+          context: udacity_context
       - test-frontend:
           requires: [build-frontend]
       - test-backend:
