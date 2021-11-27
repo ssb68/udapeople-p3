@@ -70,7 +70,11 @@ jobs:
       - save_cache:
           paths: [backend/node_modules]
           key: backend-build
-
+      - slack/notify:
+          channel: C02NSHHLNTU
+          event: fail
+          template: basic_fail_1
+  
   test-frontend:
     docker:
       - image: circleci/node:13.8.0
