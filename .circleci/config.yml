@@ -164,9 +164,8 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            #echo [all] > udapeople-p3/.circleci/ansible/inventory.txt
             pwd
-            ls -ltr
+            ls -altr
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:Project,Values=udapeople" \
@@ -174,7 +173,7 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths:
-            - ./.circleci/ansible/inventory.txt
+            - project/.circleci/ansible/inventory.txt
       - destroy_environment:
           stackId: ${CIRCLE_WORKFLOW_ID:0:7}
 
