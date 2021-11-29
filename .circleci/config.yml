@@ -20,22 +20,23 @@ commands:
   revert-migrations:
     description: Revert the last migration if successfully run in the current workflow.
     parameters:
-      # Add parameter here     
+      stackId:
+        type: string
     steps:
       - run:
           name: Revert migrations
-          # Add when this will run
+          when: on_fail
           command: |
-            # Curl command here to see if there was a successful migration associated with the workflow id, store result in SUCCESS variable
-            SUCCESS = 1
-            if(( $SUCCESS==1 )); 
+            # Your Memstash GET URL code goes here
+            # See an example below
+            SUCCESS=$(curl -H "token: 715e4665-d5cf-4a77-b925-257c5cdd9bb35" --request GET https://api.memstash.io/values/migration_<< parameters.workflow_id >>)
+            if (( $SUCCESS == "AllGood" ));
             then
-            #  cd ~/project/backend
-            #  npm install
-            #  Add revert code here. You can find this in the Getting Started section.
-              exit 1
-            fi
-            
+              cd ~/project/backend
+              npm install
+              npm run migration:revert
+            fi  
+
 jobs:
   build-frontend:
     docker:
@@ -257,15 +258,114 @@ jobs:
           command: |
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
-              curl -H "Content-Type: text/plain" -H "token: 715e4665-d5cf-4a77-b925-257c5cdd9bb3 --request PUT --data "AllGood" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
+              curl -H "Content-Type: text/plain" -H "token: 715e4665-d5cf-4a77-b925-257c5cdd9bb3" --request PUT --data "AllGood" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
             else
-              curl -H "Content-Type: text/plain" -H "token: 715e4665-d5cf-4a77-b925-257c5cdd9bb3 --request PUT --data "OhDear" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
+              curl -H "Content-Type: text/plain" -H "token: 715e4665-d5cf-4a77-b925-257c5cdd9bb3" --request PUT --data "OhDear" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
             fi
             echo "migration_${CIRCLE_WORKFLOW_ID:0:7}"
       # Here's where you will add some code to rollback on failure      
       - destroy_environment:
           stackId: ${CIRCLE_WORKFLOW_ID:0:7}
- 
+
+  deploy-frontend:
+    docker:
+      - image: circleci/node:13.8.0
+    steps:
+      # Checkout code from git
+      - checkout
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
+          command: |
+            sudo apt-get update
+            sudo apt install curl -y 
+            sudo apt install unzip
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+            /usr/local/bin/aws --version
+      - run:
+          name: Install needed os utilities
+          command: sudo apt-get install -y tar gzip
+      - run:
+          name: Install NPM
+          command: |
+            pwd
+            cd backend
+            pwd
+            ls -ltr
+            npm install
+      - run:
+          name: Get backend url
+          command: |
+            # your code here
+            export BACKEND_IP=$(aws ec2 describe-instances --filters Name=tag:project,Values=udapeople --query "Reservations[*].Instances[*].PublicIpAddress")
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            echo "${API_URL}" >> frontend/.env
+            cat frontend/.env 
+      - run:
+          name: Deploy frontend objects
+          command: |
+            cd frontend
+            npm run build
+            tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
+            aws s3 cp dist s3://udapeople-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+      # Here's where you will add some code to rollback on failure      
+      - destroy_environment:
+          stackId: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert_migrations:
+          stackId: ${CIRCLE_WORKFLOW_ID:0:7}
+
+  deploy-backend:
+      - image: circleci/node:13.8.0
+    steps:
+      # Checkout code from git
+      - checkout
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
+          command: |
+            sudo apt-get update
+            sudo apt install curl -y 
+            sudo apt install unzip
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
+            /usr/local/bin/aws --version
+      - run:
+          name: Install needed os utilities
+          command: sudo apt-get install -y tar gzip
+      - run:
+          name: Install NPM
+          command: |
+            pwd
+            cd backend
+            pwd
+            ls -ltr
+            npm install
+      # Add ssh keys with fingerprint
+      - add_ssh_keys:
+          # add the svr ssh key fingersprint (i added the ssh from the pem file into circleci manaually)
+          fingerprints: ["5e:e5:8c:b1:6c:3b:b7:98:e9:f0:76:47:c7:22:6b:eb"]
+      - run:
+          name: Install dependencies
+          command: |
+            # your code here
+      - run:
+          name: Deploy backend
+          command: |
+            # your code here
+      # Here's where you will add some code to rollback on failure  
+      - destroy_environment:
+          stackId: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert_migrations:
+          stackId: ${CIRCLE_WORKFLOW_ID:0:7}
+
 workflows:
   default:
     jobs:
@@ -289,3 +389,5 @@ workflows:
           requires: [deploy-infrastructure]
       - run-migrations:
           requires: [configure-infrastructure]
+      - deploy-frontend:
+          requires: [run-migrations]
