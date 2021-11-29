@@ -191,6 +191,14 @@ jobs:
       - add_ssh_keys:
           # add the svr ssh key fingersprint (i added the ssh from the pem file into circleci manaually)
           fingerprints: ["5e:e5:8c:b1:6c:3b:b7:98:e9:f0:76:47:c7:22:6b:eb"]
+      - run:
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
+          command: |
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       # attach workspace
       - attach_workspace:
           at: ~/
@@ -217,6 +225,14 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
+      - run:
+          name: Install AWS CLI dependencies
+          working_directory: /tmp
+          command: |
+            sudo apt-get update && sudo apt-get install -yy less
+            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+            unzip awscliv2.zip
+            sudo ./aws/install
       - restore_cache:
           keys: [backend-build]
       - run:
@@ -224,6 +240,7 @@ jobs:
           command: |
             pwd
             cd backend
+            pwd
             ls -ltr
             npm install
             npm run migrations > migrations_dump.txt
