@@ -177,6 +177,34 @@ jobs:
       - destroy_environment:
           stackId: ${CIRCLE_WORKFLOW_ID:0:7}
 
+  configure-infrastructure:
+    docker:
+      # Docker image here that supports Ansible
+      - image: python:3.9.0-alpine
+    steps:
+      # Checkout code from git
+      - checkout
+      # Add ssh keys with fingerprint
+      - add_ssh_keys:
+          # add the svr ssh key fingersprint (i added the ssh from the pem file into circleci manaually)
+          fingerprints: ["5e:e5:8c:b1:6c:3b:b7:98:e9:f0:76:47:c7:22:6b:eb"]
+      # attach workspace
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install dependencies
+          working_directory: ./.circleci/ansible
+          command: |
+            apk add --update ansible
+            ansible --version
+      - run:
+          name: Configure server
+          command: |
+            cd .circleci/ansible
+            ansible-playbook -i inventory.txt configure-server.yml
+      - destroy_environment:
+          stackId: ${CIRCLE_WORKFLOW_ID:0:7}
+
 workflows:
   default:
     jobs:
@@ -196,3 +224,5 @@ workflows:
          # filters:
          #   branches:
          #     only: [test-feature-branch]
+      - configure-infrastructure:
+          requires: [deploy-infrastructure]
