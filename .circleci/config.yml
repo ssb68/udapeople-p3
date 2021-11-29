@@ -209,6 +209,7 @@ jobs:
   run-migrations:
     docker:
       # Docker image here that supports NodeJS
+      - image: circleci/node:13.8.0
     steps:
       # Checkout code from git
       - checkout
@@ -216,11 +217,11 @@ jobs:
           name: Run migrations
           command: |
             # Your code here
-            
+            echo "todo"
       - run:
           name: Send migration results to memstash
           command: |
-            todo
+            echo "todo"
       # Here's where you will add some code to rollback on failure      
       - destroy_environment:
           stackId: ${CIRCLE_WORKFLOW_ID:0:7}
