@@ -27,8 +27,6 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-            # Your Memstash GET URL code goes here
-            # See an example below
             SUCCESS=$(curl -H "token: 715e4665-d5cf-4a77-b925-257c5cdd9bb35" --request GET https://api.memstash.io/values/migration_<< parameters.workflow_id >>)
             if (( $SUCCESS == "AllGood" ));
             then
@@ -79,7 +77,6 @@ jobs:
       - slack/notify:
           event: pass
           template: success_tagged_deploy_1
-
 
   test-frontend:
     docker:
@@ -300,7 +297,6 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            # your code here
             export BACKEND_IP=$(aws ec2 describe-instances --filters Name=tag:project,Values=udapeople --query "Reservations[*].Instances[*].PublicIpAddress")
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
@@ -320,6 +316,7 @@ jobs:
           stackId: ${CIRCLE_WORKFLOW_ID:0:7}
 
   deploy-backend:
+    docker:
       - image: circleci/node:13.8.0
     steps:
       # Checkout code from git
@@ -355,11 +352,11 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            # your code here
+            echo "todo"
       - run:
           name: Deploy backend
           command: |
-            # your code here
+            echo "todo"
       # Here's where you will add some code to rollback on failure  
       - destroy_environment:
           stackId: ${CIRCLE_WORKFLOW_ID:0:7}
