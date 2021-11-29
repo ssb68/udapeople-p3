@@ -220,7 +220,7 @@ jobs:
       # Checkout code from git
       - checkout
       - restore_cache:
-        keys: [backend-build]
+          keys: [backend-build]
       - run:
           name: Run migrations
           command: |
@@ -239,6 +239,7 @@ jobs:
             else
               curl -H "Content-Type: text/plain" -H "token: 715e4665-d5cf-4a77-b925-257c5cdd9bb3 --request PUT --data "OhDear" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
             fi
+            echo "migration_${CIRCLE_WORKFLOW_ID:0:7}"
       # Here's where you will add some code to rollback on failure      
       - destroy_environment:
           stackId: ${CIRCLE_WORKFLOW_ID:0:7}
