@@ -336,7 +336,7 @@ jobs:
           command: |
             apk add --update ansible
             ansible --version
-       - run:
+      - run:
           name: Deploy backend
           command: |
             cd backend
@@ -359,7 +359,7 @@ jobs:
 
   smoke-test:
     docker:
-       - image: python:3.9.0-alpine
+      - image: python:3.9.0-alpine
     steps:
       # Checkout code from git
       - checkout
