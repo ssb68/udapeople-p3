@@ -14,6 +14,7 @@ commands:
           name: Destroy environments
           when: on_fail
           command: |
+            aws s3 rm s3://udapeople-<< parameters.stackId >> --recursive
             aws cloudformation delete-stack --stack-name udapeople-frontend-<< parameters.stackId >>
             aws cloudformation delete-stack --stack-name udapeople-backend-<< parameters.stackId >>  
  
@@ -29,12 +30,12 @@ commands:
           command: |
             SUCCESS=$(curl -H "token: 715e4665-d5cf-4a77-b925-257c5cdd9bb3" --request GET https://api.memstash.io/values/migration_<< parameters.stackId >>)
             echo ${SUCCESS}
-            #if (( $SUCCESS == "AllGood" ));
-            #then
-            cd ~/project/backend
-            npm install
-            npm run migration:revert
-            #fi  
+            if (( $SUCCESS == "OhDear" ));
+            then
+              cd ~/project/backend
+              npm install
+              npm run migrations:revert
+            fi  
 
 jobs:
   build-frontend:
