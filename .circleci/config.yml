@@ -402,5 +402,5 @@ workflows:
       - deploy-frontend:
           requires: [run-migrations]
       - deploy-backend:
-          requires: [reploy-frontend]
+          requires: [deploy-frontend]
 
