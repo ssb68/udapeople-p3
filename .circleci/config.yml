@@ -190,18 +190,6 @@ jobs:
       - add_ssh_keys:
           # add the svr ssh key fingersprint (i added the ssh from the pem file into circleci manaually)
           fingerprints: ["5e:e5:8c:b1:6c:3b:b7:98:e9:f0:76:47:c7:22:6b:eb"]
-      #- run:
-      #    name: Install AWS CLI dependencies
-      #    working_directory: /tmp
-      #    command: |
-      #      pwd
-      #      sudo apt-get update
-      #      sudo apt install curl -y 
-      #      sudo apt install unzip
-      #      curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-      #      unzip awscliv2.zip
-      #      sudo ./aws/install
-      #      /usr/local/bin/aws --version
       - run:
           name: Install dependencies
           working_directory: ./.circleci/ansible
@@ -319,26 +307,17 @@ jobs:
 
   deploy-backend:
     docker:
-      - image: circleci/node:13.8.0
+      - image: python:3.9.0-alpine
     steps:
       # Checkout code from git
       - checkout
       - attach_workspace:
           at: ~/
       - run:
-          name: Install AWS CLI dependencies
-          working_directory: /tmp
-          command: |
-            sudo apt-get update
-            sudo apt install curl -y 
-            sudo apt install unzip
-            curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-            unzip awscliv2.zip
-            sudo ./aws/install
-            /usr/local/bin/aws --version
-      - run:
           name: Install needed os utilities
-          command: sudo apt-get install -y tar gzip
+          command: |
+            apk add --update gzip
+            pip install awscli
       - run:
           name: Install NPM
           command: |
@@ -353,9 +332,11 @@ jobs:
           fingerprints: ["5e:e5:8c:b1:6c:3b:b7:98:e9:f0:76:47:c7:22:6b:eb"]
       - run:
           name: Install dependencies
+          working_directory: ./.circleci/ansible
           command: |
-            echo "todo"
-      - run:
+            apk add --update ansible
+            ansible --version
+       - run:
           name: Deploy backend
           command: |
             cd backend
@@ -370,6 +351,58 @@ jobs:
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
 
+      # Here's where you will add some code to rollback on failure  
+      - destroy-environment:
+          stackId: ${CIRCLE_WORKFLOW_ID:0:7}
+      - revert-migrations:
+          stackId: ${CIRCLE_WORKFLOW_ID:0:7}
+
+  smoke-test:
+    docker:
+       - image: python:3.9.0-alpine
+    steps:
+      # Checkout code from git
+      - checkout
+      - restore_cache:
+          keys: [frontend-build]
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Install dependencies
+          command: |
+            #curl, nodejs, npm, or awscli.
+            apk add --update curl nodejs npm
+            pip install awscli
+      - run:
+          name: Get backend url
+          command: |
+            export BACKEND_IP=$(aws ec2 describe-instances --filters Name=tag:project,Values=udapeople --query "Reservations[*].Instances[*].PublicIpAddress")
+            echo "${BACKEND_IP}"
+      - run:
+          name: Backend smoke test.
+          command: |
+            # your code here
+            # Fetch and prepare the BACKEND_IP env var
+            export API_URL="http://${BACKEND_IP}:3030"
+            echo "${API_URL}"
+            if curl "${API_URL}/api/status" | grep "ok"
+            then
+                return 0
+            else
+                return 1
+            fi
+      - run:
+          name: Frontend smoke test.
+          command: |
+            URL="http://udapeople-${CIRCLE_WORKFLOW_ID:0:7}.s3-website-us-east-1.amazonaws.com/#/employees"            
+            echo ${URL} 
+            if curl -s ${URL} | grep "Welcome"
+            then
+              # Change this to 0 after the job fails
+              return 1
+            else
+              return 1
+            fi
       # Here's where you will add some code to rollback on failure  
       - destroy-environment:
           stackId: ${CIRCLE_WORKFLOW_ID:0:7}
@@ -402,5 +435,7 @@ workflows:
       - deploy-frontend:
           requires: [run-migrations]
       - deploy-backend:
-          requires: [deploy-frontend]
+          requires: [run-migrations]
+      - smoke-test:
+          requires: [deploy-backend, deploy-frontend]
 
