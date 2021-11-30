@@ -27,13 +27,14 @@ commands:
           name: Revert migrations
           when: on_fail
           command: |
-            SUCCESS=$(curl -H "token: 715e4665-d5cf-4a77-b925-257c5cdd9bb35" --request GET https://api.memstash.io/values/migration_<< parameters.stackId >>)
-            if (( $SUCCESS == "AllGood" ));
-            then
-              cd ~/project/backend
-              npm install
-              npm run migration:revert
-            fi  
+            SUCCESS=$(curl -H "token: 715e4665-d5cf-4a77-b925-257c5cdd9bb3" --request GET https://api.memstash.io/values/migration_<< parameters.stackId >>)
+            echo ${SUCCESS}
+            #if (( $SUCCESS == "AllGood" ));
+            #then
+            cd ~/project/backend
+            npm install
+            npm run migration:revert
+            #fi  
 
 jobs:
   build-frontend:
@@ -241,6 +242,7 @@ jobs:
       - run:
           name: Send migration results to memstash
           command: |
+            cat ~/project/backend/migrations_dump.txt
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
               curl -H "Content-Type: text/plain" -H "token: 715e4665-d5cf-4a77-b925-257c5cdd9bb3" --request PUT --data "AllGood" https://api.memstash.io/values/migration_${CIRCLE_WORKFLOW_ID:0:7}
@@ -375,11 +377,6 @@ jobs:
             #curl, nodejs, npm, or awscli.
             apk add --update curl nodejs npm
             pip install awscli
-      - run:
-          name: Get backend url
-          command: |
-            export BACKEND_IP=$(aws ec2 describe-instances --filters Name=tag:project,Values=udapeople --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
-            echo "${BACKEND_IP}"
       - run:
           name: Backend smoke test.
           command: |
