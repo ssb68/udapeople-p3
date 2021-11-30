@@ -316,7 +316,9 @@ jobs:
       - run:
           name: Install needed os utilities
           command: |
-            apk add --update gzip curl nodejs npm
+            apk update
+            apk upgrade
+            apk add --update gzip curl nodejs npm bash
             pip install awscli
       - run:
           name: Install NPM
