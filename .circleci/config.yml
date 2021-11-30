@@ -363,8 +363,6 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
-      - restore_cache:
-          keys: [frontend-build]
       - attach_workspace:
           at: ~/
       - run:
