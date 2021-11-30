@@ -20,7 +20,7 @@
 
 - name: Unarchive files that are not on the EC2 instance
   ansible.builtin.unarchive:
-    src: /root/project/backend/artifact.tar.gz
+    src: /root/project/artifact.tar.gz
     dest: /home/ubuntu
     remote_src: no
 
