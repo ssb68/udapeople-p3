@@ -429,7 +429,7 @@ jobs:
             npm --version
       - run:
           name: Update cloudfront distribution
-          working_directory: ./.circleci/ansible
+          working_directory: ./.circleci
           command: |
             export oldworkflowID=$(aws cloudformation \
             list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
@@ -438,7 +438,7 @@ jobs:
             echo ${oldworkflowID} >> ~/project/oldworkflowID.txt
                      
             aws cloudformation deploy \
-            --template-file .circleci/files/cloudfront.yml \
+            --template-file files/cloudfront.yml \
             --stack-name InitialStack \ 
             --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
             --tags project=udapeople
