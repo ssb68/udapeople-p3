@@ -418,12 +418,14 @@ jobs:
     steps:
       # Checkout code from git
       - checkout
+      - run:
+          name: Install needed os utilities
+          command: yum install -y tar gzip curl
       - attach_workspace:
           at: ~/
       - run:
-          name: dependencies
+          name: dependencies for destroy
           command: |
-            yum install -y tar gzip curl
             curl -sL https://rpm.nodesource.com/setup_10.x | bash -
             yum install -y nodejs      
             npm --version
