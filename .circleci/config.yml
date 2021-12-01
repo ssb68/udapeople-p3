@@ -436,7 +436,7 @@ jobs:
             export oldworkflowID=$(aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text)
             echo ${oldworkflowID} >> ~/project/oldworkflowID.txt
                      
-            aws cloudformation deploy --template-file files/cloudfront.yml --tags project=udapeople --stack-name InitialStack --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}" 
+            aws cloudformation deploy --template-file files/cloudfront.yml --tags project=udapeople --stack-name InitialStack --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" 
 
             echo "oldworkflowID is ${oldworkflowID}"
             echo "current workflow ID is udapeople-${CIRCLE_WORKFLOW_ID:0:7}"
