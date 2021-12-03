@@ -449,7 +449,7 @@ jobs:
       - revert-migrations:
           stackId: ${CIRCLE_WORKFLOW_ID:0:7}
 
-cleanup:
+  cleanup:
     docker:
       - image: amazon/aws-cli
     steps:
