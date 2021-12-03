@@ -471,7 +471,7 @@ jobs:
             yum install -y nodejs      
             npm --version
       - run:
-          name: Get old stack workflow id
+          name: Remove ald stacks 
           working_directory: ./.circleci
           command: |
             export oldworkflowID=$(<~/project/oldworkflowID.txt)
@@ -481,11 +481,7 @@ jobs:
               --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
             
             echo "Stack names ${STACKS[@]}"  
-      - run:
-          name: Remove old stacks and files
-          command: |
-            echo "s3://udapeople-${oldworkflowID}"
-            
+
             if [[ "${STACKS[@]}" =~ "${oldWorkflowID}" ]]
             then
               echo "deleting old versions"       
