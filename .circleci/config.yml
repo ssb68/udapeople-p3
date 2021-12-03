@@ -290,7 +290,9 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            export BACKEND_IP=$(aws ec2 describe-instances --filters Name=tag:project,Values=udapeople --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
+            export BACKEND_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             echo "${API_URL}" >> frontend/.env
@@ -383,7 +385,9 @@ jobs:
           command: |
             # your code here
             # Fetch and prepare the BACKEND_IP env var
-            export BACKEND_IP=$(aws ec2 describe-instances --filters Name=tag:project,Values=udapeople --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
+            export BACKEND_IP=$(aws ec2 describe-instances \
+              --filters "Name=tag:project,Values=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --query "Reservations[*].Instances[*].PublicIpAddress" --output text)
             echo "${BACKEND_IP}"
             
             export API_URL="http://${BACKEND_IP}:3030"
@@ -506,9 +510,10 @@ workflows:
           requires: [build-frontend]
       - deploy-infrastructure:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
-         # filters:
-         #   branches:
-         #     only: [test-feature-branch]
+          filters:
+            branches:
+              only:
+                - master
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       - run-migrations:
