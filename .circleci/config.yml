@@ -150,7 +150,11 @@ jobs:
           command: |
             aws cloudformation deploy \
               --template-file .circleci/files/backend.yml \
+<<<<<<< HEAD
               --tags "project=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+=======
+              --tags project=udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7} \
+>>>>>>> 273e96e58fcbe4be05ba58e558067c44ae2817d2
               --stack-name "udapeople-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  
       - run:
@@ -478,7 +482,7 @@ jobs:
             echo "oldworkflowID is ${oldworkflowID}"
 
             export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" \
-            --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+              --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
             
             echo "Stack names ${STACKS[@]}"  
       - run:
@@ -486,7 +490,7 @@ jobs:
           command: |
             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
             then
-              echo "${STACKS[@]}" =~ "${OldWorkflowID}" therefore will delete old versions"       
+              echo "deleting old versions"       
               aws s3 rm "s3://udapeople-${oldworkflowID}" --recursive
               aws cloudformation delete-stack --stack-name "udapeople-frontend-${oldworkflowID}"
               aws cloudformation delete-stack --stack-name "udapeople-backend-${oldworkflowID}"
